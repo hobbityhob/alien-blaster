@@ -180,6 +180,18 @@ function saveHighScores(scores) {
   localStorage.setItem(HIGH_SCORE_STORAGE_KEY, JSON.stringify(scores));
 }
 
+function qualifiesForHighScore(mode, score) {
+  const modeScores = loadHighScores()
+    .filter((entry) => entry.mode === mode)
+    .sort((a, b) => b.score - a.score);
+
+  if (modeScores.length < 20) {
+    return true;
+  }
+
+  return score > modeScores[modeScores.length - 1].score;
+}
+
 function formatScoreMode(entry) {
   return `${entry.mode}${entry.friendlyFire ? " FF" : ""}`;
 }
@@ -462,15 +474,22 @@ function fireEnemyBullet(x, y, angle, speed, width = 8, height = 16, damage = 14
 function endGame(mode) {
   state.mode = mode;
   updateHud();
+  const scoreEntry = {
+    score: state.score,
+    mode: state.playerCount === 2 ? "2P" : "1P",
+    friendlyFire: state.friendlyFire,
+    roundReached: state.round
+  };
+
   if (mode === "victory") {
-    promptHighScoreEntry({
-      score: state.score,
-      mode: state.playerCount === 2 ? "2P" : "1P",
-      friendlyFire: state.friendlyFire,
-      roundReached: 6
-    });
+    promptHighScoreEntry({ ...scoreEntry, roundReached: 6 });
   } else {
-    showMainMenu(`Mission failed. Final score: ${state.score}. Choose a mode to restart.`);
+    if (qualifiesForHighScore(scoreEntry.mode, scoreEntry.score)) {
+      promptHighScoreEntry(scoreEntry);
+      statusText.textContent = `Campaign failed, but score ${scoreEntry.score} qualifies for the ${scoreEntry.mode} board. Record your name.`;
+    } else {
+      showMainMenu(`Mission failed. Final score: ${state.score}. Choose a mode to restart.`);
+    }
   }
 }
 
