@@ -15,12 +15,23 @@ const powerupStatusEl = document.getElementById("powerup-status");
 const overlay = document.querySelector(".overlay-card");
 const statusText = document.getElementById("status-text");
 const friendlyFireButton = document.getElementById("friendly-fire-button");
+const viewScoresButton = document.getElementById("view-scores-button");
 const startOneButton = document.getElementById("start-one-button");
 const startTwoButton = document.getElementById("start-two-button");
+const scoreboardPanel = document.getElementById("scoreboard-panel");
+const scoreboardList = document.getElementById("scoreboard-list");
+const backToMenuButton = document.getElementById("back-to-menu-button");
+const nameEntryPanel = document.getElementById("name-entry-panel");
+const nameEntryText = document.getElementById("name-entry-text");
+const winnerNameInput = document.getElementById("winner-name-input");
+const submitScoreButton = document.getElementById("submit-score-button");
+const skipScoreButton = document.getElementById("skip-score-button");
+const overlayMenuBlocks = document.querySelectorAll(".controls, .overlay-card > .menu-actions");
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const keys = new Set();
+const HIGH_SCORE_STORAGE_KEY = "alien-blaster-high-scores";
 const stars = Array.from({ length: 120 }, () => ({
   x: Math.random() * WIDTH,
   y: Math.random() * HEIGHT,
@@ -39,9 +50,9 @@ const ROUND_CONFIG = [
 ];
 
 const BOSS_CONFIG = {
-  2: { label: "Boss 1", hp: 360, moveSpeed: 130, fireCooldown: 1.2, burstCooldown: 2.4 },
-  4: { label: "Boss 2", hp: 510, moveSpeed: 155, fireCooldown: 1, burstCooldown: 2 },
-  6: { label: "Boss 3", hp: 720, moveSpeed: 180, fireCooldown: 0.85, burstCooldown: 1.6 }
+  2: { label: "Boss 1", hp: 360, moveSpeed: 130, fireCooldown: 1.2, burstCooldown: 2.4, helperCooldown: 6.5 },
+  4: { label: "Boss 2", hp: 510, moveSpeed: 155, fireCooldown: 1, burstCooldown: 2, helperCooldown: 5.6 },
+  6: { label: "Boss 3", hp: 720, moveSpeed: 180, fireCooldown: 0.85, burstCooldown: 1.6, helperCooldown: 4.8 }
 };
 
 const PLAYER_CONFIG = [
@@ -52,6 +63,31 @@ const PLAYER_CONFIG = [
 let lastTime = 0;
 let state = {};
 let menuFriendlyFire = false;
+let pendingScoreEntry = null;
+
+function spawnHelperShip() {
+  state.enemies.push({
+    type: "alien",
+    x: 80 + Math.random() * (WIDTH - 160),
+    y: -30,
+    width: 34,
+    height: 28,
+    hp: 26 + state.round * 8,
+    speed: 145 + state.round * 14 + Math.random() * 30,
+    fireRate: 0.012 + state.round * 0.0015,
+    drift: (Math.random() * 2 - 1) * (24 + state.round * 4),
+    phase: Math.random() * Math.PI * 2,
+    value: 180
+  });
+}
+
+function getKnockedOutPlayers() {
+  return getPlayers().filter((player) => player.lives <= 0);
+}
+
+function needsReviveDrops() {
+  return state.playerCount === 2 && getAlivePlayers().length === 1 && getKnockedOutPlayers().length === 1;
+}
 
 function createPlayer(index, playerCount) {
   const cfg = PLAYER_CONFIG[index];
@@ -111,6 +147,98 @@ function hideOverlay() {
   overlay.classList.add("hidden");
 }
 
+function setOverlayMenuVisible(visible) {
+  for (const block of overlayMenuBlocks) {
+    block.classList.toggle("hidden-panel", !visible);
+  }
+}
+
+function hideOverlayPanels() {
+  scoreboardPanel.classList.add("hidden-panel");
+  nameEntryPanel.classList.add("hidden-panel");
+}
+
+function showMainMenu(message = "Choose solo or co-op, then blast through six rounds of alien ships and asteroid storms. Boss fights unlock after rounds 2, 4, and 6.") {
+  pendingScoreEntry = null;
+  showOverlay(message);
+  setOverlayMenuVisible(true);
+  hideOverlayPanels();
+}
+
+function loadHighScores() {
+  try {
+    const raw = localStorage.getItem(HIGH_SCORE_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHighScores(scores) {
+  localStorage.setItem(HIGH_SCORE_STORAGE_KEY, JSON.stringify(scores));
+}
+
+function formatScoreMode(entry) {
+  return `${entry.mode}${entry.friendlyFire ? " FF" : ""}`;
+}
+
+function renderHighScores() {
+  const scores = loadHighScores();
+  scoreboardList.innerHTML = "";
+  if (!scores.length) {
+    const item = document.createElement("li");
+    item.textContent = "No high scores yet.";
+    scoreboardList.appendChild(item);
+    return;
+  }
+
+  scores.slice(0, 20).forEach((entry, index) => {
+    const item = document.createElement("li");
+    item.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>${entry.score} • ${formatScoreMode(entry)}</span>`;
+    scoreboardList.appendChild(item);
+  });
+}
+
+function showHighScores() {
+  showOverlay("Top 20 scores recorded on this device.");
+  setOverlayMenuVisible(false);
+  hideOverlayPanels();
+  renderHighScores();
+  scoreboardPanel.classList.remove("hidden-panel");
+}
+
+function promptHighScoreEntry(scoreEntry) {
+  pendingScoreEntry = scoreEntry;
+  showOverlay(`Victory. Final score: ${scoreEntry.score}. Record your name for the top 20.`);
+  setOverlayMenuVisible(false);
+  hideOverlayPanels();
+  nameEntryText.textContent = `Enter a pilot or team name for ${scoreEntry.mode}.`;
+  winnerNameInput.value = "";
+  nameEntryPanel.classList.remove("hidden-panel");
+  winnerNameInput.focus();
+}
+
+function submitHighScore() {
+  if (!pendingScoreEntry) {
+    showMainMenu();
+    return;
+  }
+
+  const scores = loadHighScores();
+  scores.push({
+    name: (winnerNameInput.value.trim() || "ANON").slice(0, 18),
+    score: pendingScoreEntry.score,
+    mode: pendingScoreEntry.mode,
+    friendlyFire: pendingScoreEntry.friendlyFire,
+    recordedAt: new Date().toISOString()
+  });
+  scores.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  saveHighScores(scores.slice(0, 20));
+  pendingScoreEntry = null;
+  showHighScores();
+}
+
 function resetGame(playerCount = 1) {
   state = {
     mode: "title",
@@ -127,14 +255,17 @@ function resetGame(playerCount = 1) {
     enemyBullets: [],
     explosions: [],
     shockwaves: [],
+    transition: null,
     boss: null,
+    reviveProgress: 0,
+    reviveSpawnTimer: 0,
     players: Array.from({ length: playerCount }, (_, index) => createPlayer(index, playerCount)),
     pause: false,
     flashTimer: 0,
     message: ""
   };
   updateHud();
-  showOverlay("Choose solo or co-op, then blast through six rounds of alien ships and asteroid storms. Boss fights unlock after rounds 2, 4, and 6.");
+  showMainMenu();
 }
 
 function startGame(playerCount) {
@@ -155,6 +286,7 @@ function loadRound(round) {
   state.playerBullets = [];
   state.shockwaves = [];
   state.boss = null;
+  state.reviveSpawnTimer = 0;
   state.mode = "playing";
   state.message = ROUND_CONFIG[round - 1].label;
   state.flashTimer = 1.5;
@@ -184,7 +316,9 @@ function loadBoss(round) {
     fireTimer: cfg.fireCooldown,
     fireCooldown: cfg.fireCooldown,
     burstTimer: cfg.burstCooldown,
-    burstCooldown: cfg.burstCooldown
+    burstCooldown: cfg.burstCooldown,
+    helperTimer: cfg.helperCooldown,
+    helperCooldown: cfg.helperCooldown
   };
   for (const player of getAlivePlayers()) {
     resetPlayerPosition(player);
@@ -227,7 +361,8 @@ function updateHud() {
     }
     return `${player.label}: ${active.join(", ") || "None"}`;
   }).join(" | ");
-  powerupStatusEl.textContent = `${powerText || "No players active"} | FF: ${state.friendlyFire ? "On" : "Off"}`;
+  const reviveText = needsReviveDrops() ? `Revive ${state.reviveProgress}/3` : "Revive --";
+  powerupStatusEl.textContent = `${powerText || "No players active"} | ${reviveText} | FF: ${state.friendlyFire ? "On" : "Off"}`;
 }
 
 function spawnEnemy() {
@@ -265,6 +400,10 @@ function spawnEnemy() {
 }
 
 function maybeSpawnPowerUp(x, y) {
+  if (needsReviveDrops() && Math.random() < 0.08) {
+    state.powerUps.push({ type: "revive", x, y, width: 24, height: 24, speed: 120 });
+    return;
+  }
   const roundFactor = state.round - 1;
   const novaChance = 0.02 + roundFactor * 0.002;
   const laserChance = 0.08 + roundFactor * 0.012;
@@ -303,9 +442,15 @@ function fireEnemyBullet(x, y, angle, speed, width = 8, height = 16, damage = 14
 function endGame(mode) {
   state.mode = mode;
   updateHud();
-  showOverlay(mode === "victory"
-    ? `Victory. The alien armada is down. Final score: ${state.score}. Choose a mode to play again.`
-    : `Mission failed. Final score: ${state.score}. Choose a mode to restart.`);
+  if (mode === "victory") {
+    promptHighScoreEntry({
+      score: state.score,
+      mode: state.playerCount === 2 ? "2P" : "1P",
+      friendlyFire: state.friendlyFire
+    });
+  } else {
+    showMainMenu(`Mission failed. Final score: ${state.score}. Choose a mode to restart.`);
+  }
 }
 
 function damagePlayer(player, amount) {
@@ -317,6 +462,9 @@ function damagePlayer(player, amount) {
   state.flashTimer = 0.35;
   if (player.hp <= 0) {
     player.lives -= 1;
+    if (state.playerCount === 2) {
+      state.reviveProgress = 0;
+    }
     state.explosions.push({ x: player.x, y: player.y, radius: 18, life: 0.6, maxLife: 0.6, color: "#ffb366" });
     if (player.lives <= 0) {
       player.hp = 0;
@@ -361,16 +509,45 @@ function damageBoss(amount) {
   state.boss.hp -= amount;
   state.score += 8;
   if (state.boss.hp <= 0) {
+    const bossX = state.boss.x;
+    const bossY = state.boss.y;
+    const defeatedRound = state.round;
+    const wasFinalBoss = state.round === 6;
     state.score += 1200 + state.round * 250;
-    state.explosions.push({ x: state.boss.x, y: state.boss.y, radius: 80, life: 1.2, maxLife: 1.2, color: "#ff6e8d" });
+    createBossExplosionSequence(bossX, bossY);
+    state.enemyBullets = [];
+    state.enemies = [];
+    state.powerUps = [];
     state.boss = null;
-    if (state.round === 6) {
-      endGame("victory");
-      return;
-    }
-    loadRound(state.round + 1);
+    state.mode = "boss-defeated";
+    state.transition = {
+      timer: 2.6,
+      next: wasFinalBoss ? "victory" : "round",
+      round: defeatedRound + 1
+    };
+    state.message = "Boss destroyed";
+    state.flashTimer = 1.8;
   }
   updateHud();
+}
+
+function createBossExplosionSequence(x, y) {
+  for (let i = 0; i < 18; i += 1) {
+    const angle = (Math.PI * 2 * i) / 18;
+    const distance = 10 + Math.random() * 86;
+    const life = 1 + Math.random() * 0.7;
+    state.explosions.push({
+      x: x + Math.cos(angle) * distance,
+      y: y + Math.sin(angle) * distance,
+      radius: 28 + Math.random() * 38,
+      life,
+      maxLife: life,
+      color: i % 3 === 0 ? "#ffe27a" : i % 2 === 0 ? "#ff6e8d" : "#ff9b58",
+      delay: i * 0.06
+    });
+  }
+  state.shockwaves.push({ x, y, radius: 30, maxRadius: 260, life: 1, maxLife: 1 });
+  state.shockwaves.push({ x, y, radius: 10, maxRadius: 340, life: 1.3, maxLife: 1.3 });
 }
 
 function activateNovaBlast(player) {
@@ -405,6 +582,21 @@ function collectPowerUp(powerUp, player) {
   } else if (powerUp.type === "health") {
     player.hp = Math.min(player.maxHp, player.hp + 35);
     state.message = `${player.label} hull restored`;
+  } else if (powerUp.type === "revive") {
+    state.reviveProgress += 1;
+    state.message = `${player.label} recovered a revive shard`;
+    if (state.reviveProgress >= 3) {
+      const knockedOut = getKnockedOutPlayers()[0];
+      if (knockedOut) {
+        knockedOut.lives = 1;
+        knockedOut.hp = knockedOut.maxHp;
+        knockedOut.invulnerable = 2;
+        knockedOut.laserTimer = 0;
+        resetPlayerPosition(knockedOut);
+        state.message = `${knockedOut.label} is back in the fight`;
+      }
+      state.reviveProgress = 0;
+    }
   } else {
     activateNovaBlast(player);
   }
@@ -491,6 +683,22 @@ function updatePowerUps(dt) {
     powerUp.y += powerUp.speed * dt;
   }
   state.powerUps = state.powerUps.filter((powerUp) => powerUp.y - powerUp.height / 2 < HEIGHT + 20);
+  if (needsReviveDrops()) {
+    state.reviveSpawnTimer += dt;
+    if (state.reviveSpawnTimer >= 8.5) {
+      state.reviveSpawnTimer = 0;
+      state.powerUps.push({
+        type: "revive",
+        x: 100 + Math.random() * (WIDTH - 200),
+        y: -20,
+        width: 24,
+        height: 24,
+        speed: 135
+      });
+    }
+  } else {
+    state.reviveSpawnTimer = 0;
+  }
 }
 
 function updateEnemies(dt) {
@@ -533,6 +741,7 @@ function updateBoss(dt) {
   }
   boss.fireTimer -= dt;
   boss.burstTimer -= dt;
+  boss.helperTimer -= dt;
   if (boss.fireTimer <= 0) {
     boss.fireTimer = boss.fireCooldown;
     const target = chooseTarget(boss.x, boss.y);
@@ -550,6 +759,17 @@ function updateBoss(dt) {
       const angle = Math.PI * 0.2 + (i / (waves - 1)) * (Math.PI * 0.6);
       fireEnemyBullet(boss.x, boss.y + 8, angle, 190 + state.round * 12, 12, 22, 20);
     }
+  }
+  if (boss.helperTimer <= 0) {
+    boss.helperTimer = boss.helperCooldown;
+    if (state.enemies.length < 5) {
+      spawnHelperShip();
+      if (state.round >= 4 && state.enemies.length < 4) {
+        spawnHelperShip();
+      }
+    }
+    state.message = `${BOSS_CONFIG[state.round].label} deployed helpers`;
+    state.flashTimer = 0.9;
   }
 }
 
@@ -642,9 +862,13 @@ function handleCollisions() {
 
 function updateExplosions(dt) {
   for (const explosion of state.explosions) {
+    if (explosion.delay && explosion.delay > 0) {
+      explosion.delay -= dt;
+      continue;
+    }
     explosion.life -= dt;
   }
-  state.explosions = state.explosions.filter((explosion) => explosion.life > 0);
+  state.explosions = state.explosions.filter((explosion) => (explosion.delay && explosion.delay > 0) || explosion.life > 0);
 }
 
 function updateShockwaves(dt) {
@@ -727,20 +951,35 @@ function drawPlayer(player) {
 }
 
 function drawPowerUps() {
-  const labels = { laser: "L", nova: "N", health: "+" };
+  const labels = { laser: "L", nova: "N", health: "+", revive: "R" };
   for (const powerUp of state.powerUps) {
     ctx.save();
     ctx.translate(powerUp.x, powerUp.y);
-    ctx.fillStyle = powerUp.type === "health" ? "#38d96b" : "#ffe15a";
-    ctx.fillRect(-12, -12, 24, 24);
-    ctx.strokeStyle = powerUp.type === "health" ? "#c2ffd0" : "#fff3a6";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-12, -12, 24, 24);
-    ctx.fillStyle = powerUp.type === "health" ? "#f2fff5" : "#5a4100";
-    ctx.font = '700 14px "Orbitron", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(labels[powerUp.type], 0, 1);
+    if (powerUp.type === "revive") {
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = "#58a9ff";
+      ctx.fillRect(-11, -11, 22, 22);
+      ctx.strokeStyle = "#c6e5ff";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-11, -11, 22, 22);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillStyle = "#e9f5ff";
+      ctx.font = '700 13px "Orbitron", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(labels[powerUp.type], 0, 1);
+    } else {
+      ctx.fillStyle = powerUp.type === "health" ? "#38d96b" : "#ffe15a";
+      ctx.fillRect(-12, -12, 24, 24);
+      ctx.strokeStyle = powerUp.type === "health" ? "#c2ffd0" : "#fff3a6";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-12, -12, 24, 24);
+      ctx.fillStyle = powerUp.type === "health" ? "#f2fff5" : "#5a4100";
+      ctx.font = '700 14px "Orbitron", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(labels[powerUp.type], 0, 1);
+    }
     ctx.restore();
   }
 }
@@ -856,6 +1095,9 @@ function drawShockwaves() {
 
 function drawExplosions() {
   for (const explosion of state.explosions) {
+    if (explosion.delay && explosion.delay > 0) {
+      continue;
+    }
     const ratio = explosion.life / explosion.maxLife;
     ctx.beginPath();
     ctx.fillStyle = hexToRgba(explosion.color, ratio * 0.45);
@@ -918,17 +1160,23 @@ function render() {
 
 function update(dt) {
   updateStars(dt);
-  if (state.pause || !["playing", "boss"].includes(state.mode)) {
+  if (state.pause) {
     render();
     return;
   }
-  updatePlayers(dt);
-  updateBullets(dt);
-  updatePowerUps(dt);
-  updateEnemies(dt);
-  updateBoss(dt);
-  updateLaser(dt);
-  handleCollisions();
+  if (!["playing", "boss", "boss-defeated"].includes(state.mode)) {
+    render();
+    return;
+  }
+  if (["playing", "boss"].includes(state.mode)) {
+    updatePlayers(dt);
+    updateBullets(dt);
+    updatePowerUps(dt);
+    updateEnemies(dt);
+    updateBoss(dt);
+    updateLaser(dt);
+    handleCollisions();
+  }
   updateShockwaves(dt);
   updateExplosions(dt);
   if (state.mode === "playing") {
@@ -940,6 +1188,18 @@ function update(dt) {
       spawnEnemy();
     }
     handleRoundAdvance();
+  } else if (state.mode === "boss-defeated" && state.transition) {
+    state.transition.timer -= dt;
+    if (state.transition.timer <= 0) {
+      if (state.transition.next === "victory") {
+        state.transition = null;
+        endGame("victory");
+      } else {
+        const nextRound = state.transition.round;
+        state.transition = null;
+        loadRound(nextRound);
+      }
+    }
   }
   state.flashTimer = Math.max(0, state.flashTimer - dt);
   updateHud();
@@ -958,7 +1218,8 @@ document.addEventListener("keydown", (event) => {
   if (["Space", "Numpad8", "Numpad4", "Numpad5", "Numpad6", "Numpad0"].includes(event.code)) {
     event.preventDefault();
   }
-  if (event.code === "Enter" && ["title", "gameover", "victory"].includes(state.mode)) {
+  const overlayPanelOpen = !scoreboardPanel.classList.contains("hidden-panel") || !nameEntryPanel.classList.contains("hidden-panel");
+  if (event.code === "Enter" && ["title", "gameover", "victory"].includes(state.mode) && !overlayPanelOpen) {
     startGame(state.playerCount || 1);
   }
   if (event.code === "KeyP" && ["playing", "boss"].includes(state.mode)) {
@@ -972,11 +1233,24 @@ document.addEventListener("keyup", (event) => {
 
 startOneButton.addEventListener("click", () => startGame(1));
 startTwoButton.addEventListener("click", () => startGame(2));
+viewScoresButton.addEventListener("click", () => showHighScores());
+backToMenuButton.addEventListener("click", () => showMainMenu());
 friendlyFireButton.addEventListener("click", () => {
   menuFriendlyFire = !menuFriendlyFire;
   friendlyFireButton.textContent = `Friendly Fire: ${menuFriendlyFire ? "On" : "Off"}`;
   if (state.mode === "title") {
     updateHud();
+  }
+});
+submitScoreButton.addEventListener("click", () => submitHighScore());
+skipScoreButton.addEventListener("click", () => {
+  pendingScoreEntry = null;
+  showMainMenu("Victory recorded skipped. Choose a mode to play again.");
+});
+winnerNameInput.addEventListener("keydown", (event) => {
+  if (event.code === "Enter") {
+    event.preventDefault();
+    submitHighScore();
   }
 });
 

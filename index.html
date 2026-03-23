@@ -73,11 +73,26 @@
           </div>
           <div class="menu-actions">
             <button id="friendly-fire-button" type="button">Friendly Fire: Off</button>
+            <button id="view-scores-button" type="button">High Scores</button>
           </div>
           <div class="menu-actions">
             <button id="start-one-button" type="button">1 Player</button>
             <button id="start-two-button" type="button">2 Player</button>
           </div>
+          <section id="scoreboard-panel" class="overlay-panel hidden-panel">
+            <h2>Top 20 Scores</h2>
+            <ol id="scoreboard-list" class="scoreboard-list"></ol>
+            <button id="back-to-menu-button" type="button">Back To Menu</button>
+          </section>
+          <section id="name-entry-panel" class="overlay-panel hidden-panel">
+            <h2>Record Victory</h2>
+            <p id="name-entry-text">Enter your pilot or team name for the high score board.</p>
+            <input id="winner-name-input" type="text" maxlength="18" placeholder="Pilot name" autocomplete="off">
+            <div class="menu-actions">
+              <button id="submit-score-button" type="button">Save Score</button>
+              <button id="skip-score-button" type="button">Skip</button>
+            </div>
+          </section>
         </div>
       </div>
     </section>

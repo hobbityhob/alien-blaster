@@ -208,10 +208,65 @@ button {
   background: linear-gradient(135deg, #ffd36a, #ff9d7a);
 }
 
+#view-scores-button {
+  background: linear-gradient(135deg, #8fd3ff, #d0ff8e);
+}
+
 button:hover,
 button:focus-visible {
   transform: translateY(-2px);
   box-shadow: 0 20px 34px rgba(139, 255, 159, 0.32);
+}
+
+.overlay-panel {
+  width: min(640px, 100%);
+  padding: 18px;
+  border: 1px solid rgba(130, 219, 255, 0.2);
+  border-radius: 18px;
+  background: rgba(7, 16, 31, 0.84);
+}
+
+.overlay-panel h2 {
+  margin: 0 0 10px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scoreboard-list {
+  max-height: 300px;
+  margin: 0 0 14px;
+  padding: 0 0 0 22px;
+  overflow: auto;
+  text-align: left;
+  color: var(--text);
+}
+
+.scoreboard-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#winner-name-input {
+  width: min(320px, 100%);
+  justify-self: center;
+  padding: 12px 14px;
+  border: 1px solid rgba(139, 255, 159, 0.24);
+  border-radius: 999px;
+  outline: none;
+  font: inherit;
+  font-size: 1.05rem;
+  color: var(--text);
+  background: rgba(10, 21, 36, 0.92);
+}
+
+#winner-name-input:focus {
+  border-color: rgba(139, 255, 159, 0.55);
+  box-shadow: 0 0 0 3px rgba(139, 255, 159, 0.12);
 }
 
 .hidden-panel {
