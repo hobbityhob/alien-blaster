@@ -67,7 +67,7 @@
             <span>P1 Move: WASD</span>
             <span>P1 Fire: Space</span>
             <span>P2 Move: Numpad 8/4/5/6</span>
-            <span>P2 Fire: Numpad 0</span>
+            <span>P2 Fire: Right Arrow</span>
             <span>Start / Restart: Enter</span>
             <span>Pause: P</span>
           </div>
@@ -80,8 +80,17 @@
             <button id="start-two-button" type="button">2 Player</button>
           </div>
           <section id="scoreboard-panel" class="overlay-panel hidden-panel">
-            <h2>Top 20 Scores</h2>
-            <ol id="scoreboard-list" class="scoreboard-list"></ol>
+            <h2>High Scores</h2>
+            <div class="scoreboard-columns">
+              <section class="scoreboard-mode">
+                <h3>1 Player</h3>
+                <ol id="scoreboard-list-1p" class="scoreboard-list"></ol>
+              </section>
+              <section class="scoreboard-mode">
+                <h3>2 Player</h3>
+                <ol id="scoreboard-list-2p" class="scoreboard-list"></ol>
+              </section>
+            </div>
             <button id="back-to-menu-button" type="button">Back To Menu</button>
           </section>
           <section id="name-entry-panel" class="overlay-panel hidden-panel">

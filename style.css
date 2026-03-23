@@ -244,11 +244,47 @@ button:focus-visible {
 }
 
 .scoreboard-list li {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 14px;
   padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scoreboard-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.scoreboard-mode {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.scoreboard-mode h3 {
+  margin: 0 0 10px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.score-main,
+.score-meta {
+  display: block;
+}
+
+.score-main {
+  font-weight: 700;
+}
+
+.score-meta {
+  color: var(--subtle);
+  font-size: 0.9rem;
 }
 
 #winner-name-input {
@@ -309,5 +345,9 @@ button:focus-visible {
 
   .overlay-card p {
     font-size: 1rem;
+  }
+
+  .scoreboard-columns {
+    grid-template-columns: 1fr;
   }
 }

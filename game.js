@@ -19,7 +19,8 @@ const viewScoresButton = document.getElementById("view-scores-button");
 const startOneButton = document.getElementById("start-one-button");
 const startTwoButton = document.getElementById("start-two-button");
 const scoreboardPanel = document.getElementById("scoreboard-panel");
-const scoreboardList = document.getElementById("scoreboard-list");
+const scoreboardList1P = document.getElementById("scoreboard-list-1p");
+const scoreboardList2P = document.getElementById("scoreboard-list-2p");
 const backToMenuButton = document.getElementById("back-to-menu-button");
 const nameEntryPanel = document.getElementById("name-entry-panel");
 const nameEntryText = document.getElementById("name-entry-text");
@@ -57,7 +58,7 @@ const BOSS_CONFIG = {
 
 const PLAYER_CONFIG = [
   { label: "P1", color: "#9efee2", accent: "#f5ff88", controls: { left: "KeyA", right: "KeyD", up: "KeyW", down: "KeyS", fire: "Space" } },
-  { label: "P2", color: "#8fc2ff", accent: "#c9f2ff", controls: { left: "Numpad4", right: "Numpad6", up: "Numpad8", down: "Numpad5", fire: "Numpad0" } }
+  { label: "P2", color: "#8fc2ff", accent: "#c9f2ff", controls: { left: "Numpad4", right: "Numpad6", up: "Numpad8", down: "Numpad5", fire: "ArrowRight" } }
 ];
 
 let lastTime = 0;
@@ -183,21 +184,39 @@ function formatScoreMode(entry) {
   return `${entry.mode}${entry.friendlyFire ? " FF" : ""}`;
 }
 
-function renderHighScores() {
-  const scores = loadHighScores();
-  scoreboardList.innerHTML = "";
+function formatScoreDate(recordedAt) {
+  if (!recordedAt) {
+    return "Unknown date";
+  }
+  const date = new Date(recordedAt);
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown date";
+  }
+  return date.toLocaleDateString();
+}
+
+function renderScoreList(listEl, scores) {
+  listEl.innerHTML = "";
   if (!scores.length) {
     const item = document.createElement("li");
     item.textContent = "No high scores yet.";
-    scoreboardList.appendChild(item);
+    listEl.appendChild(item);
     return;
   }
 
   scores.slice(0, 20).forEach((entry, index) => {
+    const roundText = entry.roundReached ? `Round ${entry.roundReached}` : "Round ?";
+    const modeText = formatScoreMode(entry);
     const item = document.createElement("li");
-    item.innerHTML = `<span>${index + 1}. ${entry.name}</span><span>${entry.score} • ${formatScoreMode(entry)}</span>`;
-    scoreboardList.appendChild(item);
+    item.innerHTML = `<span><span class="score-main">${index + 1}. ${entry.name}</span><span class="score-meta">${roundText} • ${formatScoreDate(entry.recordedAt)} • ${modeText}</span></span><span>${entry.score}</span>`;
+    listEl.appendChild(item);
   });
+}
+
+function renderHighScores() {
+  const scores = loadHighScores();
+  renderScoreList(scoreboardList1P, scores.filter((entry) => entry.mode === "1P"));
+  renderScoreList(scoreboardList2P, scores.filter((entry) => entry.mode === "2P"));
 }
 
 function showHighScores() {
@@ -231,6 +250,7 @@ function submitHighScore() {
     score: pendingScoreEntry.score,
     mode: pendingScoreEntry.mode,
     friendlyFire: pendingScoreEntry.friendlyFire,
+    roundReached: pendingScoreEntry.roundReached,
     recordedAt: new Date().toISOString()
   });
   scores.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
@@ -446,7 +466,8 @@ function endGame(mode) {
     promptHighScoreEntry({
       score: state.score,
       mode: state.playerCount === 2 ? "2P" : "1P",
-      friendlyFire: state.friendlyFire
+      friendlyFire: state.friendlyFire,
+      roundReached: 6
     });
   } else {
     showMainMenu(`Mission failed. Final score: ${state.score}. Choose a mode to restart.`);
@@ -1215,7 +1236,7 @@ function gameLoop(timestamp) {
 
 document.addEventListener("keydown", (event) => {
   keys.add(event.code);
-  if (["Space", "Numpad8", "Numpad4", "Numpad5", "Numpad6", "Numpad0"].includes(event.code)) {
+  if (["Space", "Numpad8", "Numpad4", "Numpad5", "Numpad6", "ArrowRight"].includes(event.code)) {
     event.preventDefault();
   }
   const overlayPanelOpen = !scoreboardPanel.classList.contains("hidden-panel") || !nameEntryPanel.classList.contains("hidden-panel");
