@@ -1,0 +1,258 @@
+:root {
+  --bg-deep: #07111f;
+  --bg-mid: #0f2237;
+  --panel: rgba(7, 16, 31, 0.78);
+  --line: rgba(130, 219, 255, 0.18);
+  --accent: #8bff9f;
+  --accent-strong: #e7ff6f;
+  --warn: #ff7e66;
+  --boss: #ff5f87;
+  --text: #eef7ff;
+  --subtle: #9eb9c8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Rajdhani", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(79, 144, 255, 0.16), transparent 35%),
+    radial-gradient(circle at 20% 20%, rgba(123, 255, 172, 0.12), transparent 28%),
+    linear-gradient(180deg, #09111b 0%, #07111f 45%, #030812 100%);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.game-panel {
+  width: min(1080px, 100%);
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(15, 31, 52, 0.88), rgba(4, 12, 24, 0.92));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(110px, 1fr)) repeat(2, minmax(170px, 1.2fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.hud-block {
+  padding: 10px 12px;
+  border: 1px solid rgba(139, 255, 159, 0.12);
+  border-radius: 16px;
+  background: rgba(4, 11, 21, 0.72);
+}
+
+.hud-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--subtle);
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hud strong {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+}
+
+.hud-wide {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.meter {
+  width: 100%;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.meter-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #63ffce, var(--accent));
+  box-shadow: 0 0 18px rgba(99, 255, 206, 0.4);
+  transition: width 120ms linear;
+}
+
+.coop-fill {
+  background: linear-gradient(90deg, #6fb5ff, #b9f7ff);
+  box-shadow: 0 0 18px rgba(111, 181, 255, 0.35);
+}
+
+.boss-fill {
+  width: 0%;
+  background: linear-gradient(90deg, #ff8e5d, var(--boss));
+  box-shadow: 0 0 18px rgba(255, 95, 135, 0.35);
+}
+
+.progress-fill {
+  width: 0%;
+  background: linear-gradient(90deg, #ff92d2, #ffc0e7);
+  box-shadow: 0 0 18px rgba(255, 146, 210, 0.35);
+}
+
+.canvas-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(130, 219, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(5, 11, 20, 0.86), rgba(7, 17, 31, 0.96)),
+    radial-gradient(circle at center, rgba(40, 145, 215, 0.12), transparent 55%);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+
+.overlay-card {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 14px;
+  padding: 32px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(4, 11, 20, 0.28), rgba(5, 13, 24, 0.82));
+  transition: opacity 180ms ease;
+}
+
+.overlay-card.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overlay-card h1 {
+  margin: 0;
+  font-family: "Orbitron", sans-serif;
+  font-size: clamp(2.4rem, 6vw, 4.3rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.overlay-card p {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 1.15rem;
+  color: var(--subtle);
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--text);
+}
+
+.controls span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 255, 159, 0.16);
+  background: rgba(11, 23, 39, 0.76);
+}
+
+.menu-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+button {
+  justify-self: center;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #041018;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  cursor: pointer;
+  box-shadow: 0 16px 30px rgba(139, 255, 159, 0.24);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.menu-actions button:last-child {
+  background: linear-gradient(135deg, #9ed7ff, #8cffd9);
+}
+
+#friendly-fire-button {
+  background: linear-gradient(135deg, #ffd36a, #ff9d7a);
+}
+
+button:hover,
+button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 34px rgba(139, 255, 159, 0.32);
+}
+
+.hidden-panel {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .game-panel {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .hud {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .hud-stage,
+  .hud-wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 12px;
+  }
+
+  .hud {
+    grid-template-columns: 1fr;
+  }
+
+  .hud-stage,
+  .hud-wide {
+    grid-column: span 1;
+  }
+
+  .overlay-card {
+    padding: 20px;
+  }
+
+  .overlay-card p {
+    font-size: 1rem;
+  }
+}

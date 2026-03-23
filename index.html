@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alien Blaster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="game-panel">
+      <header class="hud">
+        <div class="hud-block">
+          <span class="hud-label">Score</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="hud-block">
+          <span class="hud-label">Mode</span>
+          <strong id="mode-label">1 Player</strong>
+        </div>
+        <div class="hud-block hud-stage">
+          <span class="hud-label">Stage</span>
+          <strong id="stage">Round 1</strong>
+        </div>
+        <div class="hud-block hud-wide">
+          <span class="hud-label">Player 1 Hull</span>
+          <div class="meter">
+            <div id="player1-health" class="meter-fill"></div>
+          </div>
+          <strong id="player1-lives">3 lives</strong>
+        </div>
+        <div id="player2-panel" class="hud-block hud-wide hidden-panel">
+          <span class="hud-label">Player 2 Hull</span>
+          <div class="meter">
+            <div id="player2-health" class="meter-fill coop-fill"></div>
+          </div>
+          <strong id="player2-lives">3 lives</strong>
+        </div>
+        <div class="hud-block hud-wide">
+          <span class="hud-label">Boss Core</span>
+          <div class="meter boss-meter">
+            <div id="boss-health" class="meter-fill boss-fill"></div>
+          </div>
+        </div>
+        <div class="hud-block hud-wide">
+          <span class="hud-label">Level Progress</span>
+          <div class="meter progress-meter">
+            <div id="level-progress" class="meter-fill progress-fill"></div>
+          </div>
+          <strong id="progress-text">0 / 14 targets</strong>
+        </div>
+        <div class="hud-block hud-wide">
+          <span class="hud-label">Power-Up</span>
+          <strong id="powerup-status">None active</strong>
+        </div>
+      </header>
+
+      <div class="canvas-frame">
+        <canvas id="game" width="960" height="640" aria-label="Alien Blaster game area"></canvas>
+        <div class="overlay-card">
+          <h1>Alien Blaster</h1>
+          <p id="status-text">Choose solo or co-op, then blast through six rounds of alien ships and asteroid storms. Boss fights unlock after rounds 2, 4, and 6.</p>
+          <div class="controls">
+            <span>P1 Move: WASD</span>
+            <span>P1 Fire: Space</span>
+            <span>P2 Move: Numpad 8/4/2/6</span>
+            <span>P2 Fire: Numpad 0</span>
+            <span>Start / Restart: Enter</span>
+            <span>Pause: P</span>
+          </div>
+          <div class="menu-actions">
+            <button id="friendly-fire-button" type="button">Friendly Fire: Off</button>
+          </div>
+          <div class="menu-actions">
+            <button id="start-one-button" type="button">1 Player</button>
+            <button id="start-two-button" type="button">2 Player</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
