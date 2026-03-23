@@ -51,9 +51,9 @@ const ROUND_CONFIG = [
 ];
 
 const BOSS_CONFIG = {
-  2: { label: "Boss 1", hp: 360, moveSpeed: 130, fireCooldown: 1.2, burstCooldown: 2.4, helperCooldown: 6.5 },
-  4: { label: "Boss 2", hp: 510, moveSpeed: 155, fireCooldown: 1, burstCooldown: 2, helperCooldown: 5.6 },
-  6: { label: "Boss 3", hp: 720, moveSpeed: 180, fireCooldown: 0.85, burstCooldown: 1.6, helperCooldown: 4.8 }
+  2: { label: "Boss 1", hp: 720, moveSpeed: 130, fireCooldown: 1.2, burstCooldown: 2.4, helperCooldown: 6.5 },
+  4: { label: "Boss 2", hp: 1020, moveSpeed: 155, fireCooldown: 1, burstCooldown: 2, helperCooldown: 5.6 },
+  6: { label: "Boss 3", hp: 1440, moveSpeed: 180, fireCooldown: 0.85, burstCooldown: 1.6, helperCooldown: 4.8 }
 };
 
 const PLAYER_CONFIG = [
