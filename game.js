@@ -39,14 +39,14 @@ const ROUND_CONFIG = [
 ];
 
 const BOSS_CONFIG = {
-  2: { label: "Boss 1", hp: 120, moveSpeed: 130, fireCooldown: 1.2, burstCooldown: 2.4 },
-  4: { label: "Boss 2", hp: 170, moveSpeed: 155, fireCooldown: 1, burstCooldown: 2 },
-  6: { label: "Boss 3", hp: 240, moveSpeed: 180, fireCooldown: 0.85, burstCooldown: 1.6 }
+  2: { label: "Boss 1", hp: 360, moveSpeed: 130, fireCooldown: 1.2, burstCooldown: 2.4 },
+  4: { label: "Boss 2", hp: 510, moveSpeed: 155, fireCooldown: 1, burstCooldown: 2 },
+  6: { label: "Boss 3", hp: 720, moveSpeed: 180, fireCooldown: 0.85, burstCooldown: 1.6 }
 };
 
 const PLAYER_CONFIG = [
   { label: "P1", color: "#9efee2", accent: "#f5ff88", controls: { left: "KeyA", right: "KeyD", up: "KeyW", down: "KeyS", fire: "Space" } },
-  { label: "P2", color: "#8fc2ff", accent: "#c9f2ff", controls: { left: "Numpad4", right: "Numpad6", up: "Numpad8", down: "Numpad2", fire: "Numpad0" } }
+  { label: "P2", color: "#8fc2ff", accent: "#c9f2ff", controls: { left: "Numpad4", right: "Numpad6", up: "Numpad8", down: "Numpad5", fire: "Numpad0" } }
 ];
 
 let lastTime = 0;
@@ -265,13 +265,17 @@ function spawnEnemy() {
 }
 
 function maybeSpawnPowerUp(x, y) {
+  const roundFactor = state.round - 1;
+  const novaChance = 0.02 + roundFactor * 0.002;
+  const laserChance = 0.08 + roundFactor * 0.012;
+  const healthChance = 0.1 + roundFactor * 0.028;
   const roll = Math.random();
   let type = null;
-  if (roll < 0.025) {
+  if (roll < novaChance) {
     type = "nova";
-  } else if (roll < 0.105) {
+  } else if (roll < novaChance + laserChance) {
     type = "laser";
-  } else if (roll < 0.205) {
+  } else if (roll < novaChance + laserChance + healthChance) {
     type = "health";
   }
   if (!type) {
@@ -951,7 +955,7 @@ function gameLoop(timestamp) {
 
 document.addEventListener("keydown", (event) => {
   keys.add(event.code);
-  if (["Space", "Numpad8", "Numpad4", "Numpad2", "Numpad6", "Numpad0"].includes(event.code)) {
+  if (["Space", "Numpad8", "Numpad4", "Numpad5", "Numpad6", "Numpad0"].includes(event.code)) {
     event.preventDefault();
   }
   if (event.code === "Enter" && ["title", "gameover", "victory"].includes(state.mode)) {
